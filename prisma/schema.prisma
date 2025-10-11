@@ -11,17 +11,71 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String     @unique
-  password   String?
-  // role       Role       @default(USER)
-  // phone      String
-  // picture    String?
-  // status     UserStatus @default(ACTIVE)
-  // isVerified Boolean    @default(false)
-  // createdAt  DateTime   @default(now())
-  // updatedAt  DateTime   @updatedAt
-  // posts      Post[]
-  // projects   Project[]
+  id                 String         @id @default(uuid())
+  name               String
+  email              String         @unique
+  password           String?
+  role               UserRole       @default(PATIENT)
+  needPasswordChange Boolean        @default(true)
+  status             UserStatus     @default(ACTIVE)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+
+  @@map("users")
+}
+
+model Admin {
+  id                 String         @id @default(uuid())
+  name               String
+  email              String         @unique
+  profilePhoto       String?
+  contactNumber      String         
+  isDeleted          Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+
+  @@map("admins")
+}
+model Doctor {
+  id                  String         @id @default(uuid())
+  name                String
+  email               String         @unique
+  profilePhoto        String?
+  contactNumber       String 
+  address             String
+  gender              Gender
+  appointmentFee      Int
+  qualification       String
+  currentWorkingPlace String
+  designation         String
+  experience          Int            @default(0)        
+  isDeleted           Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+
+  @@map("doctors")
+}
+
+
+
+
+
+enum UserRole {
+  ADMIN
+  DOCTOR
+  PATIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum Gender {
+MALE
+FEMALE
 }
