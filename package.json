@@ -1,9 +1,12 @@
 {
-  "name": "ph-health-care-starter",
+  "name": "health-care",
   "version": "1.0.0",
   "main": "server.js",
-  "author": "shafayat",
+  "author": "Nahid",
   "license": "MIT",
+  "prisma": {
+    "schema": "./prisma/schema"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only --watch src src/server.ts",
@@ -12,6 +15,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
