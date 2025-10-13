@@ -5,7 +5,7 @@ const createPatientValidationSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .optional(),
-  patient: {
+  patient: z.object({
     // id: z.string().uuid().optional(),
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email address"),
@@ -18,7 +18,7 @@ const createPatientValidationSchema = z.object({
     // createdAt: z.date().default(() => new Date()),
     // updatedAt: z.date().default(() => new Date()),
     // user: z.any().optional(), // relation placeholder
-  },
+  }),
 });
 
 export const UserZodValidation = {
