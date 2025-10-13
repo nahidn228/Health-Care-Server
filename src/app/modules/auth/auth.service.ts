@@ -3,6 +3,7 @@ import { prisma } from "../../shared/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "../../../config";
+import { jwtHelper } from "../../helper/jwtHelper";
 
 const loginUser = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -25,28 +26,29 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new Error("Password is incorrect");
   }
 
-  const accessToken = jwt.sign(
+  const accessToken = jwtHelper.generateToken(
     {
       email: user.email,
       role: user.role,
       id: user.id,
     },
     config.jwt.jwt_secret as string,
-    { expiresIn: "1d", algorithm: "HS256" }
+    "1d"
   );
-  const refreshToken = jwt.sign(
+  const refreshToken = jwtHelper.generateToken(
     {
       email: user.email,
       role: user.role,
       id: user.id,
     },
     config.jwt.jwt_secret as string,
-    { expiresIn: "90d", algorithm: "HS256" }
+    "90d"
   );
 
   return {
     accessToken,
     refreshToken,
+    needPasswordChange: user.needPasswordChange,
   };
 };
 
