@@ -2,15 +2,15 @@ type IOptions = {
   page?: string | number;
   limit?: string | number;
   skip: number;
-  shortBy: string;
-  shortOrder: string;
+  sortBy: string;
+  sortOrder: string;
 };
 type IOptionsResult = {
   page?: number;
   limit?: number;
   skip: number;
-  shortBy: string;
-  shortOrder: string;
+  sortBy: string;
+  sortOrder: string;
 };
 
 const calculatePagination = (options: IOptions): IOptionsResult => {
@@ -19,15 +19,17 @@ const calculatePagination = (options: IOptions): IOptionsResult => {
 
   const skip: number = (Number(page) - 1) * Number(limit);
 
-  const shortBy: string = options.shortBy || "createdAt";
-  const shortOrder: string = options.shortOrder || "desc";
+  const sortBy: string = options.sortBy || "createdAt";
+  const sortOrder: string = options.sortOrder || "desc";
   return {
     page,
     limit,
     skip,
-    shortBy,
-    shortOrder,
+    sortBy,
+    sortOrder,
   };
 };
 
-export default calculatePagination;
+export const paginationHelper = {
+  calculatePagination,
+};

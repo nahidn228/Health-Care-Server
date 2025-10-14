@@ -1,10 +1,12 @@
 import { Request } from "express";
 import config from "../../../config";
 import { prisma } from "../../shared/prisma";
-import { createPatientInput } from "./user.interface";
+
 import bcrypt from "bcryptjs";
 import { fileUploader } from "../../helper/fileUploader";
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
+import { paginationHelper } from "../../helper/pagginationHelper";
+import { userSearchableFields } from "./user.constant";
 
 const createPatient = async (req: Request) => {
   if (req.file) {
@@ -33,38 +35,65 @@ const createPatient = async (req: Request) => {
 
   return result;
 };
-
 const createAdmin = async (req: Request) => {
-  const file = req.file;
-
-  if (file) {
-    const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-    req.body.admin.profilePhoto = uploadToCloudinary?.secure_url;
+  if (req.file) {
+    const uploadedResult = await fileUploader.uploadToCloudinary(req.file);
+    req.body.patient.profilePhoto = uploadedResult?.secure_url;
   }
 
-  const hashedPassword: string = await bcrypt.hash(req.body.password, 10);
+  const hashedPassword = await bcrypt.hash(
+    req.body.password,
+    Number(config.salt_round)
+  );
 
-  const userData = {
-    email: req.body.admin.email,
-    password: hashedPassword,
-    name: req.body.admin.name,
-    role: UserRole.ADMIN,
-  };
-
-  const result = await prisma.$transaction(async (transactionClient) => {
-    await transactionClient.user.create({
-      data: userData,
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.user.create({
+      data: {
+        email: req.body.admin.email,
+        password: hashedPassword,
+        name: req.body.patient.name,
+      },
     });
 
-    const createdAdminData = await transactionClient.admin.create({
+    return await tx.admin.create({
       data: req.body.admin,
     });
-
-    return createdAdminData;
   });
 
   return result;
 };
+
+// const createAdmin = async (req: Request) => {
+//   const file = req.file;
+
+//   if (file) {
+//     const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
+//     req.body.admin.profilePhoto = uploadToCloudinary?.secure_url;
+//   }
+
+//   const hashedPassword: string = await bcrypt.hash(req.body.password, 10);
+
+//   const userData = {
+//     email: req.body.admin.email,
+//     password: hashedPassword,
+//     name: req.body.admin.name,
+//     role: UserRole.ADMIN,
+//   };
+
+//   const result = await prisma.$transaction(async (transactionClient) => {
+//     await transactionClient.user.create({
+//       data: userData,
+//     });
+
+//     const createdAdminData = await transactionClient.admin.create({
+//       data: req.body.admin,
+//     });
+
+//     return createdAdminData;
+//   });
+
+//   return result;
+// };
 
 const createDoctor = async (req: Request) => {
   const file = req.file;
@@ -144,32 +173,47 @@ const createDoctor = async (req: Request) => {
 // };
 
 const getAllFromDB = async (params: any, options: any) => {
-  const pageNumber = page || 1;
-  const limitNumber = limit || 10;
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
 
-  const skip = (pageNumber - 1) * limitNumber;
+  const { searchTerm, ...filterData } = params;
+
+  const andConditions: Prisma.UserWhereInput[] = [];
+
+  if (searchTerm) {
+    andConditions.push({
+      OR: userSearchableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
 
   const result = await prisma.user.findMany({
     skip,
-    take: limitNumber,
+    take: limit,
 
     //searching
     where: {
-      email: {
-        contains: searchTerm,
-        mode: "insensitive",
-      },
+      AND: andConditions,
     },
 
     //sorting
-    orderBy:
-      sortBy && sortOrder
-        ? {
-            [sortBy]: sortOrder,
-          }
-        : {
-            createdAt: "asc",
-          },
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
   });
   return result;
 };

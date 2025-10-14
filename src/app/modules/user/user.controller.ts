@@ -22,7 +22,7 @@ const createAdmin = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 201,
     success: true,
-    message: "Admin Created successfuly!",
+    message: "Admin Created successfully",
     data: result,
   });
 });
@@ -38,7 +38,7 @@ const createDoctor = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, ["status", "role", "email"]);
+  const filters = pick(req.query, ["status", "role", "email", "searchTerm"]);
   const options = pick(req.query, ["page", "limit", "sortOrder", "sortBy"]);
 
   // const { page, limit, searchTerm, sortOrder, sortBy, role, status } =
