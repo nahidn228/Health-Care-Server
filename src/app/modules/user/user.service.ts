@@ -109,6 +109,8 @@ const getAllFromDB = async ({
   searchTerm?: any;
   sortBy?: any;
   sortOrder?: any;
+  role?: any;
+  status?: any;
 }) => {
   const pageNumber = page || 1;
   const limitNumber = limit || 10;
@@ -125,6 +127,7 @@ const getAllFromDB = async ({
         contains: searchTerm,
         mode: "insensitive",
       },
+     
     },
 
     //sorting
