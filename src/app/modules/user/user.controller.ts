@@ -38,18 +38,20 @@ const createDoctor = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
+  const filters = pick(req.query, ["status", "role", "email"]);
   const options = pick(req.query, ["page", "limit", "sortOrder", "sortBy"]);
 
-  const { page, limit, searchTerm, sortOrder, sortBy, role, status } =
-    req.query;
+  // const { page, limit, searchTerm, sortOrder, sortBy, role, status } =
+  //   req.query;
 
-  const result = await UserService.getAllFromDB({
-    page: Number(page),
-    limit: Number(limit),
-    searchTerm,
-    sortOrder,
-    sortBy,
-  });
+  // const result = await UserService.getAllFromDB({
+  //   page: Number(page),
+  //   limit: Number(limit),
+  //   searchTerm,
+  //   sortOrder,
+  //   sortBy,
+  // });
+  const result = await UserService.getAllFromDB(filters, options);
 
   sendResponse(res, {
     statusCode: 200,

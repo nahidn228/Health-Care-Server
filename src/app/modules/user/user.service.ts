@@ -97,21 +97,53 @@ const createDoctor = async (req: Request) => {
   return result;
 };
 
-const getAllFromDB = async ({
-  page,
-  limit,
-  searchTerm,
-  sortOrder,
-  sortBy,
-}: {
-  page?: number;
-  limit?: number;
-  searchTerm?: any;
-  sortBy?: any;
-  sortOrder?: any;
-  role?: any;
-  status?: any;
-}) => {
+// const getAllFromDB = async ({
+//   page,
+//   limit,
+//   searchTerm,
+//   sortOrder,
+//   sortBy,
+// }: {
+//   page?: number;
+//   limit?: number;
+//   searchTerm?: any;
+//   sortBy?: any;
+//   sortOrder?: any;
+//   role?: any;
+//   status?: any;
+// }) => {
+//   const pageNumber = page || 1;
+//   const limitNumber = limit || 10;
+
+//   const skip = (pageNumber - 1) * limitNumber;
+
+//   const result = await prisma.user.findMany({
+//     skip,
+//     take: limitNumber,
+
+//     //searching
+//     where: {
+//       email: {
+//         contains: searchTerm,
+//         mode: "insensitive",
+//       },
+
+//     },
+
+//     //sorting
+//     orderBy:
+//       sortBy && sortOrder
+//         ? {
+//             [sortBy]: sortOrder,
+//           }
+//         : {
+//             createdAt: "asc",
+//           },
+//   });
+//   return result;
+// };
+
+const getAllFromDB = async (params: any, options: any) => {
   const pageNumber = page || 1;
   const limitNumber = limit || 10;
 
@@ -127,7 +159,6 @@ const getAllFromDB = async ({
         contains: searchTerm,
         mode: "insensitive",
       },
-     
     },
 
     //sorting
