@@ -23,6 +23,7 @@ model Admin {
   email              String         @unique
   profilePhoto       String?
   contactNumber      String         
+  role               UserRole       @default(ADMIN)
   isDeleted          Boolean        @default(false)
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
@@ -45,6 +46,7 @@ model Doctor {
   qualification       String
   currentWorkingPlace String
   designation         String
+  role                UserRole       @default(DOCTOR)
   experience          Int            @default(0)        
   isDeleted           Boolean        @default(false)
   createdAt           DateTime       @default(now())

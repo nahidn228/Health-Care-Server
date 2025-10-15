@@ -8,7 +8,7 @@ import { UserController } from "./user.controller";
 
 const router = express.Router();
 
-router.get("/", auth(UserRole.PATIENT), UserController.getAllFromDB);
+router.get("/", auth(UserRole.ADMIN), UserController.getAllFromDB);
 
 router.post(
   "/create-patient",
@@ -23,7 +23,7 @@ router.post(
 
 router.post(
   "/create-admin",
-  auth(UserRole.ADMIN),
+
   fileUploader.upload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = UserZodValidation.createAdminValidationSchema.parse(

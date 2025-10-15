@@ -8,7 +8,7 @@ import pick from "../../helper/pick";
 
 const createPatient = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.createPatient(req);
-  console.log("from controller", result)
+  console.log("from controller", result);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -20,7 +20,8 @@ const createPatient = catchAsync(async (req: Request, res: Response) => {
 
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.createAdmin(req);
-  console.log("from controller",result)
+  console.log("from controller", result);
+  
   sendResponse(res, {
     statusCode: 201,
     success: true,

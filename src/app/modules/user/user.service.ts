@@ -35,10 +35,11 @@ const createPatient = async (req: Request) => {
   console.log("from service", result);
   return result;
 };
+
 const createAdmin = async (req: Request) => {
   if (req.file) {
     const uploadedResult = await fileUploader.uploadToCloudinary(req.file);
-    req.body.patient.profilePhoto = uploadedResult?.secure_url;
+    req.body.admin.profilePhoto = uploadedResult?.secure_url;
   }
 
   const hashedPassword = await bcrypt.hash(
@@ -52,6 +53,7 @@ const createAdmin = async (req: Request) => {
         email: req.body.admin.email,
         password: hashedPassword,
         name: req.body.admin.name,
+        role: "ADMIN",
       },
     });
 
