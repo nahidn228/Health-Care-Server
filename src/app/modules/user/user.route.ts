@@ -8,7 +8,7 @@ import { UserController } from "./user.controller";
 
 const router = express.Router();
 
-router.get("/", UserController.getAllFromDB);
+router.get("/", auth(UserRole.PATIENT), UserController.getAllFromDB);
 
 router.post(
   "/create-patient",
