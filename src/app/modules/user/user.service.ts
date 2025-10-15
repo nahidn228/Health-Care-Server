@@ -32,7 +32,7 @@ const createPatient = async (req: Request) => {
       data: req.body.patient,
     });
   });
-
+  console.log("from service", result);
   return result;
 };
 const createAdmin = async (req: Request) => {
@@ -51,7 +51,7 @@ const createAdmin = async (req: Request) => {
       data: {
         email: req.body.admin.email,
         password: hashedPassword,
-        name: req.body.patient.name,
+        name: req.body.admin.name,
       },
     });
 
@@ -59,6 +59,7 @@ const createAdmin = async (req: Request) => {
       data: req.body.admin,
     });
   });
+  console.log("from service", result);
 
   return result;
 };

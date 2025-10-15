@@ -63,7 +63,7 @@ const createDoctorValidationSchema = z.object({
             error: "appointment fee is required"
         }),
         qualification: z.string({
-            error: "quilification is required"
+            error: "qualification is required"
         }),
         currentWorkingPlace: z.string({
             error: "Current working place is required!"
