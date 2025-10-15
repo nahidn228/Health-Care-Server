@@ -57,7 +57,8 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
     statusCode: 200,
     success: true,
     message: "User Retrieved successfully!",
-    data: result,
+    meta: result.meta,
+    data: result.data,
   });
 });
 

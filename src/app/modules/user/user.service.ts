@@ -201,21 +201,41 @@ const getAllFromDB = async (params: any, options: any) => {
     });
   }
 
+  const whereConditions: Prisma.UserWhereInput =
+    andConditions.length > 0
+      ? {
+          AND: andConditions,
+        }
+      : {};
+
   const result = await prisma.user.findMany({
     skip,
     take: limit,
 
     //searching
-    where: {
-      AND: andConditions,
-    },
+    // where: {
+    //   AND: andConditions,
+    // },
+    where: whereConditions,
 
     //sorting
     orderBy: {
       [sortBy]: sortOrder,
     },
   });
-  return result;
+
+  const total = await prisma.user.count({
+    where: whereConditions,
+  });
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
 };
 
 export const UserService = {
