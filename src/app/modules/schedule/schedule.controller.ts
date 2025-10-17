@@ -1,20 +1,36 @@
-import  httpStatus  from 'http-status';
+import httpStatus from "http-status";
 import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
-import { ScheduleService } from './schedule.service';
-import { Request, Response } from 'express';
+import { ScheduleService } from "./schedule.service";
+import { Request, Response } from "express";
+import pick from "../../helper/pick";
 
 const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
-    const result = await ScheduleService.insertIntoDB(req.body);
+  const result = await ScheduleService.insertIntoDB(req.body);
 
-    sendResponse(res, {
-        statusCode: 201,
-        success: true,
-        message: "Schedule created successfully!",
-        data: result
-    })
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Schedule created successfully!",
+    data: result,
+  });
+});
+
+const scheduleForDoctor = catchAsync(async (req: Request, res: Response) => {
+  const options = pick(req.query, ["page", "limit", "sortOrder", "sortBy"]);
+  const filters = pick(req.query, ["startDateTime", "endDateTime"]);
+
+  const result = await ScheduleService.scheduleForDoctor(filters, options);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Schedule for Doctor Getting successfully!",
+    data: result,
+  });
 });
 
 export const ScheduleController = {
- insertIntoDB,
+  insertIntoDB,
+  scheduleForDoctor,
 };
