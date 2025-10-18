@@ -51,7 +51,10 @@ model Doctor {
   isDeleted           Boolean        @default(false)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
+  
   doctor              DoctorSchedules[] 
+  DoctorSpecialties   DoctorSpecialties[]
+
   user User @relation(fields: [email], references: [email])
 
 
