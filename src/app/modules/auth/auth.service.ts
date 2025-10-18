@@ -1,9 +1,11 @@
+import httpStatus from "http-status";
 import { UserStatus } from "@prisma/client";
 import { prisma } from "../../shared/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "../../../config";
 import { jwtHelper } from "../../helper/jwtHelper";
+import ApiError from "../../error/apiError";
 
 const loginUser = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -14,7 +16,10 @@ const loginUser = async (payload: { email: string; password: string }) => {
   });
 
   if (!payload.password || !user.password) {
-    throw new Error("Password not provided");
+    throw new ApiError(
+      httpStatus.BAD_REQUEST, // 400
+      "Password not provided"
+    );
   }
 
   const isCorrectPassword = await bcrypt.compare(
@@ -23,7 +28,10 @@ const loginUser = async (payload: { email: string; password: string }) => {
   );
 
   if (!isCorrectPassword) {
-    throw new Error("Password is incorrect");
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED, // 401
+      "Password is incorrect"
+    );
   }
 
   const accessToken = jwtHelper.generateToken(
