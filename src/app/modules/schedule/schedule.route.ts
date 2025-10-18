@@ -2,6 +2,8 @@ import express from "express";
 import { ScheduleController } from "./schedule.controller";
 import auth from "../../middlewares/auth";
 import { UserRole } from "@prisma/client";
+import validateRequest from "../../middlewares/validateRequest";
+import { ScheduleValidation } from "./schedule.validate";
 
 const router = express.Router();
 
@@ -13,11 +15,12 @@ router.get(
 router.post(
   "/",
   auth(UserRole.DOCTOR, UserRole.ADMIN),
+  validateRequest(ScheduleValidation.insertScheduleSchema),
   ScheduleController.insertIntoDB
 );
 router.delete(
   "/:id",
-  auth(UserRole.DOCTOR, UserRole.ADMIN),
+  auth( UserRole.ADMIN),
   ScheduleController.deleteScheduleFromDB
 );
 
