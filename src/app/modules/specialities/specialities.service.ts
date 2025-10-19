@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { fileUploader } from "../../helper/fileUploader";
 import { prisma } from "../../shared/prisma";
+import { Specialties } from "@prisma/client";
 
 
 const insertIntoDB = async (req: Request) => {
@@ -20,6 +21,8 @@ const insertIntoDB = async (req: Request) => {
 
     return result;
 };
+
+
 
 const getAllFromDB = async (): Promise<Specialties[]> => {
     return await prisma.specialties.findMany();
