@@ -1,14 +1,16 @@
+import httpStatus from "http-status";
 import { Prisma } from "@prisma/client";
 import { IOptions, paginationHelper } from "../../helper/pagginationHelper";
 import { prisma } from "../../shared/prisma";
 import { doctorSearchableFields } from "./doctor.constant";
 import { IDoctorUpdateInput } from "./doctor.interface";
+import ApiError from "../../error/apiError";
 
 const getAllFromDB = async (filters: any, options: IOptions) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
 
-  const { searchTerm, specialities, ...filterData } = filters;
+  const { searchTerm, specialties, ...filterData } = filters;
 
   const andConditions: Prisma.DoctorWhereInput[] = [];
   if (searchTerm) {
@@ -22,13 +24,13 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
     });
   }
 
-  if (specialities && specialities.length > 0) {
+  if (specialties && specialties.length > 0) {
     andConditions.push({
       DoctorSpecialties: {
         some: {
-          specialities: {
+          specialties: {
             title: {
-              contains: specialities,
+              contains: specialties,
               mode: "insensitive",
             },
           },
@@ -59,7 +61,7 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
     include: {
       DoctorSpecialties: {
         include: {
-          specialities: true,
+          specialties: true,
         },
       },
     },
@@ -98,7 +100,7 @@ const updateIntoDB = async (
         await tx.doctorSpecialties.deleteMany({
           where: {
             doctorId: id,
-            specialitiesId: s.specialitiesId,
+            specialtiesId: s.specialtiesId,
           },
         });
       }
@@ -111,7 +113,7 @@ const updateIntoDB = async (
         await tx.doctorSpecialties.create({
           data: {
             doctorId: id,
-            specialitiesId: specialty.specialitiesId,
+            specialtiesId: specialty.specialtiesId,
           },
         });
       }
@@ -125,7 +127,7 @@ const updateIntoDB = async (
       include: {
         DoctorSpecialties: {
           include: {
-            specialities: true,
+            specialties: true,
           },
         },
       },
@@ -137,7 +139,31 @@ const updateIntoDB = async (
   return result;
 };
 
+const getAlSuggestion = async (payload: { symptoms: string }) => {
+  console.log(payload);
+
+  if (!(payload && payload.symptoms)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "give some symptoms");
+  }
+
+  const doctors = await prisma.doctor.findMany({
+    where: {
+      isDeleted: false,
+    },
+    include: {
+      DoctorSpecialties: {
+        include: {
+          specialties: true,
+        },
+      },
+    },
+  });
+
+  console.log(doctors);
+};
+
 export const DoctorService = {
   getAllFromDB,
   updateIntoDB,
+  getAlSuggestion,
 };

@@ -53,7 +53,7 @@ model Doctor {
   updatedAt           DateTime       @updatedAt
   
   doctor              DoctorSchedules[] 
-  DoctorSpecialties   DoctorSpecialties[]
+  doctorSpecialties   DoctorSpecialties[]
 
   user User @relation(fields: [email], references: [email])
 

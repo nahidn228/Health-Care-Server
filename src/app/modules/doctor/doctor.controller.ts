@@ -19,28 +19,32 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
     data: result.data,
   });
 });
+const getAlSuggestion = catchAsync(async (req: Request, res: Response) => {
+  const result = await DoctorService.getAlSuggestion(req.body);
 
-
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Fetch AI Driven Doctor Suggestion!",
+    data: result,
+  });
+});
 
 const updateIntoDB = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
 
-    const { id } = req.params;
+  const result = await DoctorService.updateIntoDB(id, req.body);
 
-    const result = await DoctorService.updateIntoDB(id, req.body);
-
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: "Doctor updated successfully!",
-        data: result
-    })
-})
-
-
-
-
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Doctor updated successfully!",
+    data: result,
+  });
+});
 
 export const DoctorController = {
   getAllFromDB,
-  updateIntoDB
+  updateIntoDB,
+  getAlSuggestion,
 };

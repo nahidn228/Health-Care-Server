@@ -14,7 +14,7 @@ export type IDoctorUpdateInput = {
     designation: string;
     isDeleted: boolean;
     specialties: {
-        specialitiesId: string;
+        specialtiesId: string;
         isDeleted?: boolean;
     }[]
 }
