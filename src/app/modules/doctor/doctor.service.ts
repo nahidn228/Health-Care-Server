@@ -26,7 +26,7 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
 
   if (specialties && specialties.length > 0) {
     andConditions.push({
-      DoctorSpecialties: {
+      doctorSpecialties: {
         some: {
           specialties: {
             title: {
@@ -59,7 +59,7 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
       [sortBy]: sortOrder,
     },
     include: {
-      DoctorSpecialties: {
+      doctorSpecialties: {
         include: {
           specialties: true,
         },
@@ -93,6 +93,8 @@ const updateIntoDB = async (
 
   const { specialties, ...doctorData } = payload;
 
+
+
   const result = await prisma.$transaction(async (tx) => {
     if (specialties && specialties.length > 0) {
       const deleteSpecialtyIds = specialties.filter((s) => s.isDeleted);
@@ -118,14 +120,13 @@ const updateIntoDB = async (
         });
       }
     }
-
     const updatedData = await tx.doctor.update({
       where: {
         id: doctorInfo.id,
       },
       data: doctorData,
       include: {
-        DoctorSpecialties: {
+        doctorSpecialties: {
           include: {
             specialties: true,
           },
@@ -151,7 +152,7 @@ const getAlSuggestion = async (payload: { symptoms: string }) => {
       isDeleted: false,
     },
     include: {
-      DoctorSpecialties: {
+      doctorSpecialties: {
         include: {
           specialties: true,
         },
