@@ -8,7 +8,7 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
 
-  const { searchTerm, ...filterData } = filters;
+  const { searchTerm, specialities, ...filterData } = filters;
 
   const andConditions: Prisma.DoctorWhereInput[] = [];
   if (searchTerm) {
@@ -19,6 +19,21 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
           mode: "insensitive",
         },
       })),
+    });
+  }
+
+  if (specialities && specialities.length > 0) {
+    andConditions.push({
+      DoctorSpecialties: {
+        some: {
+          specialities: {
+            title: {
+              contains: specialities,
+              mode: "insensitive",
+            },
+          },
+        },
+      },
     });
   }
 
@@ -40,6 +55,13 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
     take: limit,
     orderBy: {
       [sortBy]: sortOrder,
+    },
+    include: {
+      DoctorSpecialties: {
+        include: {
+          specialities: true,
+        },
+      },
     },
   });
 
@@ -69,48 +91,50 @@ const updateIntoDB = async (
 
   const { specialties, ...doctorData } = payload;
 
-  if (specialties && specialties.length > 0) {
-    const deleteSpecialtyIds = specialties.filter((s) => s.isDeleted);
-    for (const s of deleteSpecialtyIds) {
-      await prisma.doctorSpecialties.deleteMany({
-        where: {
-          doctorId: id,
-          specialitiesId: s.specialitiesId,
-        },
-      });
+  const result = await prisma.$transaction(async (tx) => {
+    if (specialties && specialties.length > 0) {
+      const deleteSpecialtyIds = specialties.filter((s) => s.isDeleted);
+      for (const s of deleteSpecialtyIds) {
+        await tx.doctorSpecialties.deleteMany({
+          where: {
+            doctorId: id,
+            specialitiesId: s.specialitiesId,
+          },
+        });
+      }
+
+      const createSpecialtyIds = specialties.filter(
+        (specialty) => !specialty.isDeleted
+      );
+
+      for (const specialty of createSpecialtyIds) {
+        await tx.doctorSpecialties.create({
+          data: {
+            doctorId: id,
+            specialitiesId: specialty.specialitiesId,
+          },
+        });
+      }
     }
 
-    const createSpecialtyIds = specialties.filter(
-      (specialty) => !specialty.isDeleted
-    );
-
-    for (const specialty of createSpecialtyIds) {
-      await prisma.doctorSpecialties.create({
-        data: {
-          doctorId: id,
-          specialitiesId: specialty.specialitiesId,
-        },
-      });
-    }
-
-    console.log({ createSpecialtyIds, deleteSpecialtyIds });
-  }
-
-  const updatedData = await prisma.doctor.update({
-    where: {
-      id: doctorInfo.id,
-    },
-    data: doctorData,
-    include: {
-      DoctorSpecialties: {
-        include: {
-          specialities: true,
+    const updatedData = await tx.doctor.update({
+      where: {
+        id: doctorInfo.id,
+      },
+      data: doctorData,
+      include: {
+        DoctorSpecialties: {
+          include: {
+            specialities: true,
+          },
         },
       },
-    },
+    });
+
+    return updatedData;
   });
 
-  return updatedData;
+  return result;
 };
 
 export const DoctorService = {
