@@ -6,7 +6,7 @@ import { doctorSearchableFields } from "./doctor.constant";
 import { IDoctorUpdateInput } from "./doctor.interface";
 import ApiError from "../../error/apiError";
 
-import { openai } from "../../helper/OpenRouter";
+import { extractAiDoctorResult, openai } from "../../helper/OpenRouter";
 
 const getAllFromDB = async (filters: any, options: IOptions) => {
   const { page, limit, skip, sortBy, sortOrder } =
@@ -141,8 +141,6 @@ const updateIntoDB = async (
 };
 
 const getAlSuggestion = async (payload: { symptoms: string }) => {
-  console.log(payload);
-
   if (!(payload && payload.symptoms)) {
     throw new ApiError(httpStatus.BAD_REQUEST, "give some symptoms");
   }
@@ -167,6 +165,8 @@ const getAlSuggestion = async (payload: { symptoms: string }) => {
     specialties: d.doctorSpecialties.map((ds) => ds.specialties.title),
   }));
 
+  console.log("doctor Summaries", doctorSummaries);
+
   const prompt = `
 You are a medical assistant AI. Based on the patient's symptoms, suggest the top 3 most suitable doctors.
 Each doctor has specialties and years of experience.
@@ -175,13 +175,13 @@ Only suggest doctors who are relevant to the given symptoms.
 Symptoms: ${payload.symptoms}
 
 Here is the doctor list (in JSON):
-${JSON.stringify(doctors, null, 2)}
+${JSON.stringify(doctorSummaries, null, 2)}
 
 Return your response in JSON format with full individual doctor data. 
 `;
 
   const completion = await openai.chat.completions.create({
-    model: "meta-llama/llama-4-maverick:free",
+    model: "tngtech/deepseek-r1t2-chimera:free",
     messages: [
       {
         role: "system",
@@ -192,10 +192,31 @@ Return your response in JSON format with full individual doctor data.
         role: "user",
         content: prompt,
       },
-      
     ],
   });
   console.log(completion.choices[0].message);
+
+  // const message = completion.choices[0]?.message?.content || "";
+  // console.log("Raw response:", message);
+
+  // // Extract JSON from triple backticks
+  // const jsonMatch = message.match(/```json([\s\S]*?)```/);
+  // let doctorData;
+
+  // if (jsonMatch && jsonMatch[1]) {
+  //   try {
+  //     doctorData = JSON.parse(jsonMatch[1].trim());
+  //   } catch (err) {
+  //     console.error("Error parsing doctor JSON:", err);
+  //   }
+  // }
+
+  // console.log("Doctor Info:", doctorData);
+  // return doctorData;
+
+  const result = await extractAiDoctorResult(completion);
+
+  return result;
 };
 
 export const DoctorService = {
