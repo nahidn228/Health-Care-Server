@@ -59,6 +59,8 @@ model Doctor {
 
 
   @@map("doctors")
+  Appointment Appointment[]
+  Prescription Prescription[]
 }
 
 
@@ -79,5 +81,7 @@ model Patient {
 
 
   @@map("patients")
+  Appointment Appointment[]
+  Prescription Prescription[]
 }
 
