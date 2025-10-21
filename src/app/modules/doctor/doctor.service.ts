@@ -6,6 +6,8 @@ import { doctorSearchableFields } from "./doctor.constant";
 import { IDoctorUpdateInput } from "./doctor.interface";
 import ApiError from "../../error/apiError";
 
+import { openai } from "../../helper/OpenRouter";
+
 const getAllFromDB = async (filters: any, options: IOptions) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
@@ -93,8 +95,6 @@ const updateIntoDB = async (
 
   const { specialties, ...doctorData } = payload;
 
-
-
   const result = await prisma.$transaction(async (tx) => {
     if (specialties && specialties.length > 0) {
       const deleteSpecialtyIds = specialties.filter((s) => s.isDeleted);
@@ -160,7 +160,42 @@ const getAlSuggestion = async (payload: { symptoms: string }) => {
     },
   });
 
-  console.log(doctors);
+  // 2. Prepare prompt for AI
+  const doctorSummaries = doctors.map((d) => ({
+    id: d.id,
+    name: d.name,
+    specialties: d.doctorSpecialties.map((ds) => ds.specialties.title),
+  }));
+
+  const prompt = `
+You are a medical assistant AI. Based on the patient's symptoms, suggest the top 3 most suitable doctors.
+Each doctor has specialties and years of experience.
+Only suggest doctors who are relevant to the given symptoms.
+
+Symptoms: ${payload.symptoms}
+
+Here is the doctor list (in JSON):
+${JSON.stringify(doctors, null, 2)}
+
+Return your response in JSON format with full individual doctor data. 
+`;
+
+  const completion = await openai.chat.completions.create({
+    model: "meta-llama/llama-4-maverick:free",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a helpful AI medical assistant that provides doctor suggestions.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+      
+    ],
+  });
+  console.log(completion.choices[0].message);
 };
 
 export const DoctorService = {
