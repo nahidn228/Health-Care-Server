@@ -52,15 +52,15 @@ model Doctor {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   
-  doctor              DoctorSchedules[] 
+  doctorSchedules     DoctorSchedules[] 
   doctorSpecialties   DoctorSpecialties[]
 
   user User @relation(fields: [email], references: [email])
 
 
   @@map("doctors")
-  Appointment Appointment[]
-  Prescription Prescription[]
+  appointments Appointment[]
+  prescriptions Prescription[]
 }
 
 
@@ -81,7 +81,7 @@ model Patient {
 
 
   @@map("patients")
-  Appointment Appointment[]
-  Prescription Prescription[]
+  appointments Appointment[]
+  prescriptions Prescription[]
 }
 
