@@ -29,7 +29,7 @@ const createAppointment = async (
   const videoCallingId = uuidv4();
 
   const result = await prisma.$transaction(async (tx) => {
-    const createAppointment = await tx.appointment.create({
+    const appointmentData = await tx.appointment.create({
       data: {
         patientId: patientData.id,
         doctorId: doctorData.id,
@@ -49,7 +49,18 @@ const createAppointment = async (
         isBooked: true,
       },
     });
-    return createAppointment;
+
+    const transactionId = uuidv4();
+
+    await tx.payment.create({
+      data: {
+        appointmentId: appointmentData.id,
+        amount: doctorData.appointmentFee,
+        transactionId,
+      },
+    });
+
+    return appointmentData;
   });
 
   return result;
