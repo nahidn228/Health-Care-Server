@@ -1,3 +1,4 @@
+import { stripe } from "../../helper/stripe";
 import { prisma } from "../../shared/prisma";
 import { IJwtPayload } from "../../type/common";
 import { v4 as uuidv4 } from "uuid";
@@ -59,6 +60,33 @@ const createAppointment = async (
         transactionId,
       },
     });
+
+    // 💰 Create Stripe Checkout Sessions
+ 
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      customer_email: user.email,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Appointment with ${doctorData.name}`,
+              description: `Consultation with ${doctorData.name}`,
+            },
+            unit_amount: Math.round(doctorData.appointmentFee * 100), // convert dollars → cents
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `https://nahidhasan-portfolio.vercel.app/`,
+      cancel_url: `https://www.linkedin.com/in/nahid-hasan01/`,
+    });
+
+
+    console.log("from Appointment session", session)
 
     return appointmentData;
   });
