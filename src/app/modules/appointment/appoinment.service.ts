@@ -1,5 +1,6 @@
 import { prisma } from "../../shared/prisma";
 import { IJwtPayload } from "../../type/common";
+import { v4 as uuidv4 } from "uuid";
 
 const createAppointment = async (
   user: IJwtPayload,
@@ -7,31 +8,51 @@ const createAppointment = async (
 ) => {
   console.log({ user, payload });
 
-  await prisma.$transaction(async (tx) => {
-    const patientData = await tx.user.findUniqueOrThrow({
-      where: {
-        email: user.email,
+  const patientData = await prisma.patient.findUniqueOrThrow({
+    where: {
+      email: user.email,
+    },
+  });
+  const doctorData = await prisma.doctor.findUniqueOrThrow({
+    where: {
+      id: payload.doctorId,
+      isDeleted: false,
+    },
+  });
+  const isBooked = await prisma.doctorSchedules.findFirstOrThrow({
+    where: {
+      doctorId: payload.doctorId,
+      scheduleId: payload.scheduleId,
+      isBooked: false,
+    },
+  });
+  const videoCallingId = uuidv4();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const createAppointment = await tx.appointment.create({
+      data: {
+        patientId: patientData.id,
+        doctorId: doctorData.id,
+        scheduleId: isBooked.scheduleId,
+        videoCallingId,
       },
     });
-    const doctorData = await tx.doctor.findUniqueOrThrow({
+
+    await tx.doctorSchedules.update({
       where: {
-        id: payload.doctorId,
-        isDeleted: false,
+        doctorId_scheduleId: {
+          doctorId: doctorData.id,
+          scheduleId: isBooked.scheduleId,
+        },
+      },
+      data: {
+        isBooked: true,
       },
     });
-    const isBooked = await tx.doctorSchedules.findFirstOrThrow({
-      where: {
-        doctorId: payload.doctorId,
-        scheduleId: payload.scheduleId,
-        isBooked: false,
-      },
-    });
+    return createAppointment;
   });
 
-  return {
-    user,
-    payload,
-  };
+  return result;
 };
 
 export const AppointmentService = {
