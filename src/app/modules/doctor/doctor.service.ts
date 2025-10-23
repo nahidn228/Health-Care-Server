@@ -164,8 +164,6 @@ const getAlSuggestion = async (payload: { symptoms: string }) => {
     specialties: d.doctorSpecialties.map((ds) => ds.specialties.title),
   }));
 
-  
-
   const prompt = `
 You are a kind and empathetic AI medical assistant who helps patients find the right doctor. suggest the top 3 most suitable doctors.
 When responding, write naturally as if you care for the patient's well-being.
@@ -210,77 +208,74 @@ Output format:
   return result;
 };
 
-
 const getByIdFromDB = async (id: string): Promise<Doctor | null> => {
-    const result = await prisma.doctor.findUnique({
-        where: {
-            id,
-            isDeleted: false,
-        },
+  const result = await prisma.doctor.findUnique({
+    where: {
+      id,
+      isDeleted: false,
+    },
+    include: {
+      doctorSpecialties: {
         include: {
-            doctorSpecialties: {
-                include: {
-                    specialties: true,
-                },
-            },
-            
-            doctorSchedules: {
-                include: {
-                    schedule: true
-                }
-            }
+          specialties: true,
         },
-    });
-    return result;
+      },
+
+      doctorSchedules: {
+        include: {
+          schedule: true,
+        },
+      },
+    },
+  });
+  return result;
 };
 
 const deleteFromDB = async (id: string): Promise<Doctor> => {
-    return await prisma.$transaction(async (transactionClient) => {
-        const deleteDoctor = await transactionClient.doctor.delete({
-            where: {
-                id,
-            },
-        });
-
-        await transactionClient.user.delete({
-            where: {
-                email: deleteDoctor.email,
-            },
-        });
-
-        return deleteDoctor;
+  return await prisma.$transaction(async (transactionClient) => {
+    const deleteDoctor = await transactionClient.doctor.delete({
+      where: {
+        id,
+      },
     });
+
+    await transactionClient.user.delete({
+      where: {
+        email: deleteDoctor.email,
+      },
+    });
+
+    return deleteDoctor;
+  });
 };
 
 const softDelete = async (id: string): Promise<Doctor> => {
-    return await prisma.$transaction(async (transactionClient) => {
-        const deleteDoctor = await transactionClient.doctor.update({
-            where: { id },
-            data: {
-                isDeleted: true,
-            },
-        });
-
-        await transactionClient.user.update({
-            where: {
-                email: deleteDoctor.email,
-            },
-            data: {
-                status: UserStatus.DELETED,
-            },
-        });
-
-        return deleteDoctor;
+  return await prisma.$transaction(async (transactionClient) => {
+    const deleteDoctor = await transactionClient.doctor.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+      },
     });
+
+    await transactionClient.user.update({
+      where: {
+        email: deleteDoctor.email,
+      },
+      data: {
+        status: UserStatus.DELETED,
+      },
+    });
+
+    return deleteDoctor;
+  });
 };
-
-
-
-
-
 
 export const DoctorService = {
   getAllFromDB,
   updateIntoDB,
   getAlSuggestion,
+  getByIdFromDB,
+  softDelete,
+  deleteFromDB,
 };
