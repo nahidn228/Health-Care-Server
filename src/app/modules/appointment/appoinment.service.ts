@@ -39,7 +39,7 @@ const createAppointment = async (
       },
     });
 
-    await tx.doctorSchedules.update({
+    const doctorScheduleData = await tx.doctorSchedules.update({
       where: {
         doctorId_scheduleId: {
           doctorId: doctorData.id,
@@ -53,7 +53,7 @@ const createAppointment = async (
 
     const transactionId = uuidv4();
 
-    await tx.payment.create({
+    const paymentData = await tx.payment.create({
       data: {
         appointmentId: appointmentData.id,
         amount: doctorData.appointmentFee,
@@ -62,7 +62,6 @@ const createAppointment = async (
     });
 
     // 💰 Create Stripe Checkout Sessions
- 
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -71,7 +70,7 @@ const createAppointment = async (
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "bdt",
             product_data: {
               name: `Appointment with ${doctorData.name}`,
               description: `Consultation with ${doctorData.name}`,
@@ -81,14 +80,18 @@ const createAppointment = async (
           quantity: 1,
         },
       ],
+      metadata: {
+        doctorScheduleId: doctorScheduleData.scheduleId,
+        paymentId: paymentData.id,
+        appointmentId: appointmentData.id,
+      },
       success_url: `https://nahidhasan-portfolio.vercel.app/`,
       cancel_url: `https://www.linkedin.com/in/nahid-hasan01/`,
     });
 
+    console.log("from Appointment session", session);
 
-    console.log("from Appointment session", session)
-
-    return appointmentData;
+    return { paymentUrl: session.url };
   });
 
   return result;

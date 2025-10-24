@@ -7,18 +7,16 @@ import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import config from "../../../config";
 
-
-
-const endpointSecret = config.stripe.webhook_secret as string;
+// const endpointSecret = config.stripe.webhook_secret as string;
 
 const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
+  const webhookSecret = config.stripe.webhook_secret as string;
 
   let event: Stripe.Event;
 
   try {
-
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err: any) {
     console.error("⚠️ Webhook signature verification failed.", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -34,6 +32,9 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   // }
 
   const result = await PaymentService.handleStripeWebhook(event);
+
+  console.log("webhookSecret", webhookSecret)
+  console.log(result)
 
   sendResponse(res, {
     statusCode: 201,
