@@ -22,6 +22,7 @@ const handleStripeWebhook = async (event: Stripe.Event) => {
               : PaymentStatus.UNPAID,
         },
       });
+
       await prisma.payment.update({
         where: {
           id: paymentId,
@@ -31,6 +32,8 @@ const handleStripeWebhook = async (event: Stripe.Event) => {
             session.payment_status === "paid"
               ? PaymentStatus.PAID
               : PaymentStatus.UNPAID,
+
+          paymentGatewayData: JSON.parse(JSON.stringify(session)),
         },
       });
 
