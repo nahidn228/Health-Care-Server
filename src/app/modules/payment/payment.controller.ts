@@ -6,6 +6,9 @@ import { stripe } from "../../helper/stripe";
 import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import config from "../../../config";
+import pick from "../../helper/pick";
+import { AppointmentService } from "../appointment/appoinment.service";
+import { IJwtPayload } from "../../type/common";
 
 // const endpointSecret = config.stripe.webhook_secret as string;
 
@@ -44,6 +47,21 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // const handleStripeWebhook = async (req: Request, res: Response) => {
 //   const sig = req.headers["stripe-signature"] as string;
 
@@ -66,6 +84,10 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
 //     res.status(500).send("Internal Server Error");
 //   }
 // };
+
+
+
+
 
 export const PaymentController = {
   handleStripeWebhook,
