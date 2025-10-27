@@ -46,6 +46,7 @@ model Doctor {
   qualification       String
   currentWorkingPlace String
   designation         String
+  averageRating       Float          @default(0)
   role                UserRole       @default(DOCTOR)
   experience          Int            @default(0)        
   isDeleted           Boolean        @default(false)
