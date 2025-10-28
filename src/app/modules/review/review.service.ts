@@ -16,7 +16,9 @@ const createReview = async (user: IJwtPayload, payload: any) => {
     },
   });
 
-  if (patientData.id !== appointmentData.id) {
+  console.log({ patientData, appointmentData });
+
+  if (patientData.id !== appointmentData.patientId) {
     throw new ApiError(httpStatus.BAD_REQUEST, "This is not Your Appointment ");
   }
 

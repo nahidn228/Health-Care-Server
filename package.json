@@ -11,7 +11,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only --watch src src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "stripe:listen": "stripe listen --forward-to localhost:5000/webhook"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
