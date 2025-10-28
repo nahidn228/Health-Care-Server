@@ -16,7 +16,10 @@ export default {
   jwt: {
     jwt_secret: process.env.JWT_SECRET,
     jwt_expiresIn: process.env.JWT_EXPIRES,
+    reset_pass_secret: process.env.JWT_RESET_PASS_SECRET,
+    reset_pass_token_expires_in: process.env.JWT_RESET_PASS_TOKEN_EXPIRES,
   },
+  reset_pass_link: process.env.RESET_PASS_LINK,
   openRouter: {
     api_key: process.env.OPEN_ROUTER_API_KEY,
   },
@@ -24,4 +27,10 @@ export default {
     secret_key: process.env.STRIPE_SECRET_KEY,
     webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
   },
+  smtp:{
+    host: process.env.SMTP_HOST
+    port: process.env.SMTP_PORT
+    user: process.env.SMTP_USER
+    pass: process.env.SMTP_PASS
+  }
 };
