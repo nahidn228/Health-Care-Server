@@ -66,6 +66,11 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
           specialties: true,
         },
       },
+      review: {
+        select: {
+          rating: true,
+        },
+      },
     },
   });
 
@@ -226,6 +231,7 @@ const getByIdFromDB = async (id: string): Promise<Doctor | null> => {
           schedule: true,
         },
       },
+      review: true,
     },
   });
   return result;
