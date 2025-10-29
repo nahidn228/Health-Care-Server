@@ -28,9 +28,9 @@ export default {
     webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
   },
   smtp:{
-    host: process.env.SMTP_HOST
-    port: process.env.SMTP_PORT
-    user: process.env.SMTP_USER
-    pass: process.env.SMTP_PASS
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   }
 };

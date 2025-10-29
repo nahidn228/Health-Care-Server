@@ -6,6 +6,7 @@ import jwt, { Secret } from "jsonwebtoken";
 import config from "../../../config";
 import { jwtHelper } from "../../helper/jwtHelper";
 import ApiError from "../../error/apiError";
+import emailSender from "./emailSender";
 
 const loginUser = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -63,10 +64,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
 const refreshToken = async (token: string) => {
   let decodedData;
   try {
-    decodedData = jwtHelper.verifyToken(
-      token,
-      config.jwt.jwt_secret as Secret
-    );
+    decodedData = jwtHelper.verifyToken(token, config.jwt.jwt_secret as Secret);
   } catch (err) {
     throw new Error("You are not authorized!");
   }
