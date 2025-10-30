@@ -1,5 +1,10 @@
-import  httpStatus  from 'http-status';
-import { AppointmentStatus, Prisma, UserRole } from "@prisma/client";
+import httpStatus from "http-status";
+import {
+  AppointmentStatus,
+  PaymentStatus,
+  Prisma,
+  UserRole,
+} from "@prisma/client";
 import { IOptions, paginationHelper } from "../../helper/pagginationHelper";
 import { stripe } from "../../helper/stripe";
 import { prisma } from "../../shared/prisma";
@@ -101,101 +106,152 @@ const createAppointment = async (
   return result;
 };
 
+const getMyAppointment = async (
+  user: IJwtPayload,
+  filters: any,
+  options: IOptions
+) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
+  const { ...filterData } = filters;
 
+  const andConditions: Prisma.AppointmentWhereInput[] = [];
 
-const getMyAppointment = async (user: IJwtPayload, filters: any, options: IOptions) => {
-    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
-    const { ...filterData } = filters;
+  if (user.role === UserRole.PATIENT) {
+    andConditions.push({
+      patient: {
+        email: user.email,
+      },
+    });
+  } else if (user.role === UserRole.DOCTOR) {
+    andConditions.push({
+      doctor: {
+        email: user.email,
+      },
+    });
+  }
 
-    const andConditions: Prisma.AppointmentWhereInput[] = [];
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.keys(filterData).map((key) => ({
+      [key]: {
+        equals: (filterData as any)[key],
+      },
+    }));
 
-    if (user.role === UserRole.PATIENT) {
-        andConditions.push({
-            patient: {
-                email: user.email
-            }
-        })
-    }
-    else if (user.role === UserRole.DOCTOR) {
-        andConditions.push({
-            doctor: {
-                email: user.email
-            }
-        })
-    }
+    andConditions.push(...filterConditions);
+  }
 
-    if (Object.keys(filterData).length > 0) {
-        const filterConditions = Object.keys(filterData).map(key => ({
-            [key]: {
-                equals: (filterData as any)[key]
-            }
-        }))
+  const whereConditions: Prisma.AppointmentWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
 
-        andConditions.push(...filterConditions)
-    }
+  const result = await prisma.appointment.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
+    include:
+      user.role === UserRole.DOCTOR ? { patient: true } : { doctor: true },
+  });
 
-    const whereConditions: Prisma.AppointmentWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
+  const total = await prisma.appointment.count({
+    where: whereConditions,
+  });
 
-    const result = await prisma.appointment.findMany({
-        where: whereConditions,
-        skip,
-        take: limit,
-        orderBy: {
-            [sortBy]: sortOrder
+  return {
+    meta: {
+      total,
+      limit,
+      page,
+    },
+    data: result,
+  };
+};
+
+const updateAppointmentStatus = async (
+  appointmentId: string,
+  status: AppointmentStatus,
+  user: IJwtPayload
+) => {
+  const appointmentData = await prisma.appointment.findUniqueOrThrow({
+    where: {
+      id: appointmentId,
+    },
+    include: {
+      doctor: true,
+    },
+  });
+
+  if (user.role === UserRole.DOCTOR) {
+    if (!(user.email === appointmentData.doctor.email))
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "This is not your appointment"
+      );
+  }
+
+  return await prisma.appointment.update({
+    where: {
+      id: appointmentId,
+    },
+    data: {
+      status,
+    },
+  });
+};
+
+const cancelUnpaidAppointment = async () => {
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
+  const unpaidAppointments = await prisma.appointment.findMany({
+    where: {
+      createdAt: {
+        lte: thirtyMinAgo,
+      },
+      paymentStatus: PaymentStatus.UNPAID,
+    },
+  });
+
+  const appointmentIdsToCancel = unpaidAppointments.map(
+    (appointment) => appointment.id
+  );
+
+  await prisma.$transaction(async (tnx) => {
+    await tnx.payment.deleteMany({
+      where: {
+        appointmentId: {
+          in: appointmentIdsToCancel,
         },
-        include: user.role === UserRole.DOCTOR ?
-            { patient: true } : { doctor: true }
+      },
     });
 
-    const total = await prisma.appointment.count({
-        where: whereConditions
+    await tnx.appointment.deleteMany({
+      where: {
+        id: {
+          in: appointmentIdsToCancel,
+        },
+      },
     });
 
-    return {
-        meta: {
-            total,
-            limit,
-            page
-        },
-        data: result
-    }
-
-}
-
-
-
-const updateAppointmentStatus = async (appointmentId: string, status: AppointmentStatus, user: IJwtPayload) => {
-    const appointmentData = await prisma.appointment.findUniqueOrThrow({
+    for (const unPaidAppointment of unpaidAppointments) {
+      await tnx.doctorSchedules.update({
         where: {
-            id: appointmentId
-        },
-        include: {
-            doctor: true
-        }
-    });
-
-    if (user.role === UserRole.DOCTOR) {
-        if (!(user.email === appointmentData.doctor.email))
-            throw new ApiError(httpStatus.BAD_REQUEST, "This is not your appointment")
-    }
-
-    return await prisma.appointment.update({
-        where: {
-            id: appointmentId
+          doctorId_scheduleId: {
+            doctorId: unPaidAppointment.doctorId,
+            scheduleId: unPaidAppointment.scheduleId,
+          },
         },
         data: {
-            status
-        }
-    })
-
-}
-
-
-
-
+          isBooked: false,
+        },
+      });
+    }
+  });
+};
 
 export const AppointmentService = {
   createAppointment,
   getMyAppointment,
   updateAppointmentStatus,
+  cancelUnpaidAppointment,
 };

@@ -242,8 +242,6 @@ const getAllFromDB = async (params: any, options: any) => {
   };
 };
 
-
-
 const getMyProfile = async (user: IJwtPayload) => {
   const userInfo = await prisma.user.findUniqueOrThrow({
     where: {
