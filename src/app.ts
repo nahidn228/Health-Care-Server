@@ -32,7 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 //corn
 cron.schedule("* * * * *", () => {
   try {
-    console.log("Node cron called at", new Date());
+    // console.log("Node cron called at", new Date());
     AppointmentService.cancelUnpaidAppointment;
   } catch (error) {
     console.error(error);
